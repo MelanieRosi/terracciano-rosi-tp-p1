@@ -26,7 +26,7 @@ public class Juego extends InterfaceJuego
  {
   // Inicializa el objeto entorno
   this.entorno = new Entorno(this, "Proyecto para TP", 800, 600);
-  this.entorno.iniciar();
+  
   fondo=Herramientas.cargarImagen("fondo.png");
   mago= new Personaje(300.0,300.0,entorno);
   rocas=new Obstaculo[5];
@@ -35,7 +35,7 @@ public class Juego extends InterfaceJuego
   for(int i=0 ; i<rocas.length;i++) {
   rocas[i] =new Obstaculo(corX[i],corY[i],entorno); 
   }
-
+  this.entorno.iniciar();
 }
  
    public void tick() {
@@ -110,14 +110,14 @@ public class Juego extends InterfaceJuego
       this.inhDerecha=true;
       
      }
-//limite con las rocas por debajo:checkear        
-   if (Math.abs(o.bordeInferior-o.bordeSuperior)< 0.5
+//limite con las rocas por debajo:funciona (corregido)     
+   if (Math.abs(p.bordeInferior-o.bordeSuperior)< 0.5
      && p.bordeIzquierdo < o.bordeDerecho
      && p.bordeDerecho > o.bordeIzquierdo){
     this.inhAbajo=true;
    }
-//limite con las rocas por arriba: checkear 
-   if (Math.abs(o.bordeSuperior-o.bordeInferior)< 0.5
+//limite con las rocas por arriba:funciona (corregido)
+   if (Math.abs(p.bordeSuperior-o.bordeInferior)< 0.5
      && p.bordeIzquierdo < o.bordeDerecho
      && p.bordeDerecho > o.bordeIzquierdo){
     this.inhArriba=true;
