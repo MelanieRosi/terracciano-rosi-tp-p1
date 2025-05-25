@@ -17,6 +17,12 @@ public class Personaje {
     double bordeIzquierdo;
     double bordeSuperior;
     double bordeInferior;
+    
+ // ——— Añade aquí los campos de vida ———
+    int vidaMax = 100;
+    int vidaActual = vidaMax;
+    // ————————————————————————————
+    
  public Personaje (double x, double y, Entorno e){
   super();
   this.x = x;
@@ -25,7 +31,7 @@ public class Personaje {
   
   this.imgD =Herramientas.cargarImagen("brujoDerecho.png");
   this.imgI = Herramientas.cargarImagen("brujoIzquierdo.png");
-  //this.escala modifica el tamaño del personaje.
+ //this.escala modifica el tamaño del personaje.
   this.escala = 0.3;
   this.alto = imgI.getHeight(null)*this.escala;
   this.ancho = imgI.getWidth(null)*this.escala;
@@ -59,4 +65,22 @@ public class Personaje {
   this.bordeInferior=this.y+this.alto/2;
   
  }
+ 
+//——— Métodos para la vida ———
+
+/** Resta d puntos de vida (no baja de 0). */
+public void recibirDanio(int d) {
+	   vidaActual -= d;
+
+	   if (vidaActual < 0) vidaActual = 0;
+	}
+
+/** Devuelve true si sigue con vida. */
+public boolean estaVivo() {
+	   return vidaActual > 0;
+	}
+
+
+
+
  }
