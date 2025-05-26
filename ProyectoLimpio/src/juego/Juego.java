@@ -27,6 +27,12 @@ public class Juego extends InterfaceJuego
  int enemigosDerrotados = 0; // Contador de murciélagos eliminados
  Murcielagos[] murcielagosEnPantalla; // Arreglo que almacena los murciélagos activos
 
+ int energiaMagica = 100;
+
+ // Nuevos hechizos encapsulados
+ Hechizo hechizoAgua;
+ Hechizo hechizoFuego;
+
  Juego()
  {
   // Inicializa el objeto entorno
@@ -43,153 +49,173 @@ public class Juego extends InterfaceJuego
 
   }
   murcielagosEnPantalla = new Murcielagos[maxEnemigosPantalla];
-  // Se crea el arreglo con espacio para hasta 10 murciélagos simultáneamente
+
+  hechizoAgua = new Hechizo("Bomba de Agua", 0, 60);
+  hechizoFuego = new Hechizo("Bomba de Fuego", 25, 100);
   this.entorno.iniciar();
 }
  
-   public void tick() {
+   	public void tick() {
+	   
+	        entorno.dibujarImagen(fondo, entorno.ancho() / 2, entorno.alto() / 2, 0, 1);
+	        mago.dibujar();
 
-//aparece gondolf: 2: hacia arriba o abajo, 0:rota; 1:zoom	   
-   entorno.dibujarImagen(fondo,entorno.ancho()/2,entorno.alto()/2,0,1);
-    mago.dibujar();
-      
-//movimiento de Gondolf en el entorno según los comando del teclado: funciona
-   for (int i=0; i< rocas.length;i++) {
-    colisionMagoRoca(mago,rocas[i]);
-   }
-   
-   colisionMagoPantalla(mago);
-   
-   
-   if(entorno.estaPresionada(entorno.TECLA_DERECHA)
-     &&!this.inhDerecha) {
-    mago.mover(1,0);
-    
-  }
-   
-   if(entorno.estaPresionada(entorno.TECLA_IZQUIERDA)
-     &&!this.inhIzquierda) {
-    mago.mover(-1,0);
-    
-  }
-   
-   if(entorno.estaPresionada(entorno.TECLA_ARRIBA)
-     &&!this.inhArriba) {
-    mago.mover(0,-1);
-    
-  }
-   
-   if(entorno.estaPresionada(entorno.TECLA_ABAJO)
-     &&!this.inhAbajo) {
-    mago.mover(0,1);
-    
-  } 
-   
-   for(int i=0 ; i<rocas.length; i++) {
-    rocas[i].dibujar();
-    
-   }
+	        for (int i = 0; i < rocas.length; i++) colisionMagoRoca(mago, rocas[i]);
+	        colisionMagoPantalla(mago);
 
-   this.inhAbajo=false;
-   this.inhArriba=false;
-   this.inhDerecha=false;
-   this.inhIzquierda=false;
-      
-      for(int i=0 ; i<rocas.length; i++) {
-    rocas[i].dibujar();
-      }
-      
-/////////////////////////////murcielagos//////////////////////////////////////////
-      if (enemigosVivos < maxEnemigosPantalla 
-              && (enemigosDerrotados + enemigosVivos) < totalEnemigos) {
-              Murcielagos nuevo = crearMurcielagoEnBorde();
-              if (nuevo != null) {
-                  agregarMurcielago(nuevo);
-                  enemigosVivos++;
-              }
-          }
-          // ----- 2) Mover y dibujar murciélagos, y eliminar los muertos -----
-          for (int i = 0; i < murcielagosEnPantalla.length; i++) {
-              Murcielagos m = murcielagosEnPantalla[i];
-              if (m != null) {
-                  m.moverHacia(mago.x, mago.y);
-                  m.dibujar(entorno);
-                  // Si está muy cerca, lo consideramos "derrotado"
-                  if (m.estaCerca(mago.x, mago.y, 15)) {
-                      murcielagosEnPantalla[i] = null;
-                      enemigosVivos--;
-                      enemigosDerrotados++;
-                  }
-                  
-                  // Si toca al mago, le hace daño y desaparece  ← NUEVO
-                  if (m.estaCerca(mago.x, mago.y, 30)) {       // ← NUEVO umbral
-                      mago.recibirDanio(10);                   // ← NUEVO dañar al mago
-                      murcielagosEnPantalla[i] = null;         // ← NUEVO eliminar murciélago
-                      enemigosVivos--;                         // ← NUEVO actualizar contador
-                  }
-          }
-      }
-/////////////////////////////menu//////////////////////////////////////////
+	        if (entorno.estaPresionada(entorno.TECLA_DERECHA) && !inhDerecha) mago.mover(1, 0);
+	        if (entorno.estaPresionada(entorno.TECLA_IZQUIERDA) && !inhIzquierda) mago.mover(-1, 0);
+	        if (entorno.estaPresionada(entorno.TECLA_ARRIBA) && !inhArriba) mago.mover(0, -1);
+	        if (entorno.estaPresionada(entorno.TECLA_ABAJO) && !inhAbajo) mago.mover(0, 1);
 
-       //fondo grande
-       entorno.dibujarRectangulo(700, 300,200,600, 0.0, Color.gray);
-       //rectangulos con botones de hechizos
-       entorno.dibujarRectangulo(700, 150,185,265, 0.0, Color.darkGray);
-       entorno.cambiarFont("Times New Roman", 32, Color.red);
-       entorno.escribirTexto("Hechizos", 635, 60);
-       //rectangulo con barras de vida
-       entorno.dibujarRectangulo(700, 450,185,265, 0.0, Color.darkGray);  
-       //boton bomba de agua
-       entorno.dibujarRectangulo(700, 190,170,50, 0.0, Color.red);
-       entorno.cambiarFont("Times New Roman", 24, Color.cyan);
-       entorno.escribirTexto("Bomba de Agua", 620, 200);
-       //boton de bomba de fuego
-       entorno.dibujarRectangulo(700, 245,170,50, 0.0, Color.red);
-       entorno.cambiarFont("Times New Roman", 24, Color.cyan);
-       entorno.escribirTexto("Bomba de Fuego",619, 250); 
-       //linea de vida 
-       entorno.dibujarRectangulo(700, 400,170,30, 0.0, Color.red);
-       entorno.cambiarFont("Times New Roman", 26, Color.cyan);
-       entorno.escribirTexto("%100", 660, 410);
-       //linea de ??
-       entorno.dibujarRectangulo(700, 500,170,30, 0.0, Color.red);
-       entorno.cambiarFont("Times New Roman", 28, Color.cyan);
-       entorno.escribirTexto("%100", 660, 510);
-          
- }
-   
-   public Murcielagos crearMurcielagoEnBorde() {
-       int lado = (int)(Math.random() * 4);
-       int margen = 20;
-       double x = 0, y = 0;
+	        for (int i = 0; i < rocas.length; i++) rocas[i].dibujar();
 
-       if (lado == 0) {            // arriba
-           x = Math.random() * entorno.ancho();
-           y = -margen;
-       } else if (lado == 1) {     // abajo
-           x = Math.random() * entorno.ancho();
-           y = entorno.alto() + margen;
-       } else if (lado == 2) {     // izquierda
-           x = -margen;
-           y = Math.random() * entorno.alto();
-       } else {                    // derecha
-           x = entorno.ancho() + margen;
-           y = Math.random() * entorno.alto();
-       }
+	        inhAbajo = false;
+	        inhArriba = false;
+	        inhDerecha = false;
+	        inhIzquierda = false;
 
-       return new Murcielagos(x, y);
-      
-   }
+	        if (entorno.sePresionoBoton(entorno.BOTON_IZQUIERDO)) {
+	            int mx = entorno.mouseX();
+	            int my = entorno.mouseY();
 
-   // AGREGA UN MURCIÉLAGO EN EL PRIMER HUECO LIBRE
-  public   void agregarMurcielago(Murcielagos nuevo) {
-      for (int i = 0; i < murcielagosEnPantalla.length; i++) {
-          if (murcielagosEnPantalla[i] == null) {
-              murcielagosEnPantalla[i] = nuevo;
-              return;
-          }
-      }
-  }
+	            if (mx >= 615 && mx <= 785 && my >= 165 && my <= 215) {
+	                hechizoAgua.seleccionar();
+	                hechizoFuego.deseleccionar();
+	            } else if (mx >= 615 && mx <= 785 && my >= 220 && my <= 270 && energiaMagica >= hechizoFuego.costoEnergia) {
+	                hechizoFuego.seleccionar();
+	                hechizoAgua.deseleccionar();
+	            } else if (mx < 600) {
+	                Hechizo hechizoActivo = null;
+	                if (hechizoAgua.seleccionado) hechizoActivo = hechizoAgua;
+	                else if (hechizoFuego.seleccionado) hechizoActivo = hechizoFuego;
+
+	                if (hechizoActivo != null && energiaMagica >= hechizoActivo.costoEnergia) {
+	                    entorno.dibujarCirculo(mx, my, hechizoActivo.areaEfecto * 2, Color.cyan);
+	                    for (int i = 0; i < murcielagosEnPantalla.length; i++) {
+	                        Murcielagos m = murcielagosEnPantalla[i];
+	                        if (m != null) {
+	                            double dx = m.x - mx;
+	                            double dy = m.y - my;
+	                            if (Math.sqrt(dx * dx + dy * dy) <= hechizoActivo.areaEfecto) {
+	                                murcielagosEnPantalla[i] = null;
+	                                enemigosVivos--;
+	                                enemigosDerrotados++;
+	                            }
+	                        }
+	                    }
+	                    energiaMagica -= hechizoActivo.costoEnergia;
+	                    hechizoActivo.deseleccionar();
+	                }
+	            }
+	        }
+	/////////////////////// Murcielagos///////////////////////////////////
+	        if (enemigosVivos < maxEnemigosPantalla && (enemigosDerrotados + enemigosVivos) < totalEnemigos) {
+	            Murcielagos nuevo = crearMurcielagoEnBorde();
+	            if (nuevo != null) {
+	                agregarMurcielago(nuevo);
+	                enemigosVivos++;
+	            }
+	        }
+
+	        for (int i = 0; i < murcielagosEnPantalla.length; i++) {
+	            Murcielagos m = murcielagosEnPantalla[i];
+	            if (m != null) {
+	                m.moverHacia(mago.x, mago.y);
+	                m.dibujar(entorno);
+
+	                if (m.estaCerca(mago.x, mago.y, 30)) {
+	                    mago.recibirDanio(2);  // Daño ajustado para que 50 murciélagos bajen 100 puntos
+	                    murcielagosEnPantalla[i] = null;
+	                    enemigosVivos--;
+	                }
+
+	                if (!mago.estaVivo()) {
+	                    entorno.cambiarFont("Arial", 48, Color.RED);
+	                    entorno.escribirTexto("¡Juego Terminado!", 250, 300);
+	                    return;
+	                }
+	            }
+	        }
+	///////////////////////////////////////////////////////////////////////////////
+	     // ------------------ PANEL LATERAL ------------------
+	        entorno.dibujarRectangulo(700, 300, 200, 600, 0.0, Color.gray);
+	        entorno.dibujarRectangulo(700, 150, 185, 265, 0.0, Color.darkGray);
+	        entorno.dibujarRectangulo(700, 450, 185, 265, 0.0, Color.darkGray);
+
+	        // ------------------ BOTONES ------------------
+	        entorno.dibujarRectangulo(700, 190, 170, 50, 0.0,Color.red);
+	        entorno.dibujarRectangulo(700, 245, 170, 50, 0.0, Color.red);
+	        entorno.cambiarFont("Times New Roman", 32, Color.red);
+	        entorno.escribirTexto("Hechizos", 635, 60);
+	        entorno.cambiarFont("Times New Roman", 24, Color.cyan);
+	        entorno.escribirTexto("Bomba de Agua", 620, 200);
+	        entorno.escribirTexto("Bomba de Fuego", 619, 250);
+
+	     // ------------------ BARRA DE VIDA ------------------
+	        double porcentajeVida = (double) mago.vidaActual / mago.vidaMax;
+	        int anchoVida = (int)(170 * porcentajeVida);
+	        entorno.dibujarRectangulo(700, 350, 170, 30, 0.0, Color.gray);
+	        entorno.dibujarRectangulo(700 - (170 - anchoVida) / 2, 350, anchoVida, 30, 0.0, Color.red);
+	        entorno.cambiarFont("Times New Roman", 20, Color.white);
+	        entorno.escribirTexto((int)(porcentajeVida * 100) + "%", 665, 357);
+
+	        // ------------------ BARRA DE ENERGÍA ------------------
+	        double porcentajeEnergia = (double) energiaMagica / 100.0;
+	        int anchoEnergia = (int)(170 * porcentajeEnergia);
+	        entorno.dibujarRectangulo(700, 400, 170, 30, 0.0, Color.gray);
+	        entorno.dibujarRectangulo(700 - (170 - anchoEnergia) / 2, 400, anchoEnergia, 30, 0.0, Color.blue);
+	        entorno.cambiarFont("Times New Roman", 20, Color.white);
+	        entorno.escribirTexto((int)(porcentajeEnergia * 100) + "%", 665, 407);
+
+
+	     // ------------------ ESTADÍSTICAS UNIFICADAS (centradas) ------------------
+	        entorno.cambiarFont("Georgia", 18, Color.white);
+	        entorno.escribirTexto("Derrotados: " + enemigosDerrotados, 640, 460);
+	        entorno.escribirTexto("Hechizo: " +
+	            (hechizoAgua.seleccionado ? "Agua" :
+	             hechizoFuego.seleccionado ? "Fuego" : "Ninguno"),
+	            640, 480);
+
+	      
+}  
+
+  //Método que crea un murciélago en uno de los bordes de la pantalla
+   	public Murcielagos crearMurcielagoEnBorde() {
+   	 int lado = (int)(Math.random() * 4);  // Selecciona aleatoriamente un borde: 0=arriba, 1=abajo, 2=izquierda, 3=derecha
+   	 int margen = 20;  // Define un margen para que el murciélago aparezca ligeramente fuera del borde
+   	 double x = 0, y = 0;
+
+   	 // Según el borde seleccionado, se asignan coordenadas iniciales
+   	 if (lado == 0) { // Aparece arriba
+   	     x = Math.random() * entorno.ancho(); // X aleatoria dentro del ancho del entorno
+   	     y = -margen; // Justo por encima del límite superior
+   	 } else if (lado == 1) { // Aparece abajo
+   	     x = Math.random() * entorno.ancho();
+   	     y = entorno.alto() + margen; // Justo por debajo del límite inferior
+   	 } else if (lado == 2) { // Aparece a la izquierda
+   	     x = -margen; // Justo fuera del borde izquierdo
+   	     y = Math.random() * entorno.alto();
+   	 } else { // Aparece a la derecha
+   	     x = entorno.ancho() + margen; // Justo fuera del borde derecho
+   	     y = Math.random() * entorno.alto();
+   	 }
+
+   	 // Crea y retorna un nuevo murciélago con las coordenadas generadas
+   	 return new Murcielagos(x, y);
+   	}
+
+   	//Método que agrega un nuevo murciélago en la primera posición libre del arreglo
+   	public void agregarMurcielago(Murcielagos nuevo) {
+   	 for (int i = 0; i < murcielagosEnPantalla.length; i++) {
+   	     if (murcielagosEnPantalla[i] == null) { // Busca el primer hueco libre
+   	         murcielagosEnPantalla[i] = nuevo;  // Coloca el nuevo murciélago en esa posición
+   	         return; // Sale del bucle una vez agregado
+   	     }
+   	 }
+   	}
+
+
          		
   public void colisionMagoRoca(Personaje p, Obstaculo o) {
 
