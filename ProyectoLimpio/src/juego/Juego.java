@@ -12,6 +12,8 @@ public class Juego extends InterfaceJuego
  // ...
  Entorno entorno;
  Image fondo;
+ Image imagenVictoria;
+ Image imagenDerrota;
  Murcielagos murcielagos;
  Personaje mago;
  //Menu menu;
@@ -32,7 +34,16 @@ public class Juego extends InterfaceJuego
  // Nuevos hechizos encapsulados
  Hechizo hechizoAgua;
  Hechizo hechizoFuego;
-
+ boolean botonAguaSeleccionado = false;
+ boolean botonFuegoSeleccionado = false;
+ boolean circuloActivo = false;
+ long tiempoInicioCirculo = 0;
+ int circuloX = 0;
+ int circuloY = 0;
+ int radioCirculo = 0;
+ Color colorCirculo = Color.cyan; // valor por defecto
+ boolean juegoTerminado = false;
+ boolean magoGano = false;
  Juego()
  {
   // Inicializa el objeto entorno
@@ -46,7 +57,8 @@ public class Juego extends InterfaceJuego
   int [] corY={70,100,500,515,300};
   for(int i=0 ; i<rocas.length;i++) {
   rocas[i] =new Obstaculo(corX[i],corY[i],entorno); 
-
+  imagenVictoria = Herramientas.cargarImagen("victoria.png");
+  imagenDerrota = Herramientas.cargarImagen("derrota.png");
   }
   murcielagosEnPantalla = new Murcielagos[maxEnemigosPantalla];
 
@@ -58,7 +70,24 @@ public class Juego extends InterfaceJuego
    	public void tick() {
 	   
 	        entorno.dibujarImagen(fondo, entorno.ancho() / 2, entorno.alto() / 2, 0, 1);
+	        if (juegoTerminado) {
+	            if (magoGano) {
+	                entorno.dibujarImagen(imagenVictoria, entorno.ancho() / 2, entorno.alto() / 2, 0);
+	            } else {
+	                entorno.dibujarImagen(imagenDerrota, entorno.ancho() / 2, entorno.alto() / 2, 0);
+	            }
+	            return; // no seguir dibujando más cosas
+	        }
 	        mago.dibujar();
+	       
+	        if (circuloActivo) {
+	            long tiempoActual = System.currentTimeMillis();
+	            if (tiempoActual - tiempoInicioCirculo <= 300) { // 1000 ms = 1 segundo
+	                entorno.dibujarCirculo(circuloX, circuloY, radioCirculo * 2, colorCirculo);
+	            } else {
+	                circuloActivo = false; // desactivar después de 1 segundo
+	            }
+	        }
 
 	        for (int i = 0; i < rocas.length; i++) colisionMagoRoca(mago, rocas[i]);
 	        colisionMagoPantalla(mago);
@@ -82,16 +111,28 @@ public class Juego extends InterfaceJuego
 	            if (mx >= 615 && mx <= 785 && my >= 165 && my <= 215) {
 	                hechizoAgua.seleccionar();
 	                hechizoFuego.deseleccionar();
+	                botonAguaSeleccionado = true;
+	                botonFuegoSeleccionado = false;
 	            } else if (mx >= 615 && mx <= 785 && my >= 220 && my <= 270 && energiaMagica >= hechizoFuego.costoEnergia) {
 	                hechizoFuego.seleccionar();
 	                hechizoAgua.deseleccionar();
+	                botonAguaSeleccionado = false;
+	                botonFuegoSeleccionado = true;
 	            } else if (mx < 600) {
 	                Hechizo hechizoActivo = null;
+	                botonAguaSeleccionado = false;
+	                botonFuegoSeleccionado = false;
 	                if (hechizoAgua.seleccionado) hechizoActivo = hechizoAgua;
 	                else if (hechizoFuego.seleccionado) hechizoActivo = hechizoFuego;
 
 	                if (hechizoActivo != null && energiaMagica >= hechizoActivo.costoEnergia) {
-	                    entorno.dibujarCirculo(mx, my, hechizoActivo.areaEfecto * 2, Color.cyan);
+	                    
+	                	circuloX = mx;
+	                	circuloY = my;
+	                	radioCirculo = hechizoActivo.areaEfecto;
+	                	colorCirculo = (hechizoActivo == hechizoFuego) ? Color.red : Color.cyan;
+	                	tiempoInicioCirculo = System.currentTimeMillis();
+	                	circuloActivo = true;
 	                    for (int i = 0; i < murcielagosEnPantalla.length; i++) {
 	                        Murcielagos m = murcielagosEnPantalla[i];
 	                        if (m != null) {
@@ -130,12 +171,7 @@ public class Juego extends InterfaceJuego
 	                    enemigosVivos--;
 	                }
 
-	                if (!mago.estaVivo()) {
-	                    entorno.cambiarFont("Arial", 48, Color.RED);
-	                    entorno.escribirTexto("¡Juego Terminado!", 250, 300);
-	                    return;
-	                }
-	            }
+	          }
 	        }
 	///////////////////////////////////////////////////////////////////////////////
 	     // ------------------ PANEL LATERAL ------------------
@@ -144,40 +180,50 @@ public class Juego extends InterfaceJuego
 	        entorno.dibujarRectangulo(700, 450, 185, 265, 0.0, Color.darkGray);
 
 	        // ------------------ BOTONES ------------------
-	        entorno.dibujarRectangulo(700, 190, 170, 50, 0.0,Color.red);
-	        entorno.dibujarRectangulo(700, 245, 170, 50, 0.0, Color.red);
+	        entorno.dibujarRectangulo(700, 190, 170, 50, 0.0, botonAguaSeleccionado ? Color.green : Color.red);
+	        entorno.dibujarRectangulo(700, 245, 170, 50, 0.0, botonFuegoSeleccionado ? Color.green : Color.red);
 	        entorno.cambiarFont("Times New Roman", 32, Color.red);
 	        entorno.escribirTexto("Hechizos", 635, 60);
-	        entorno.cambiarFont("Times New Roman", 24, Color.cyan);
+	        entorno.cambiarFont("Times New Roman", 24, Color.white);
 	        entorno.escribirTexto("Bomba de Agua", 620, 200);
 	        entorno.escribirTexto("Bomba de Fuego", 619, 250);
 
 	     // ------------------ BARRA DE VIDA ------------------
+	        entorno.cambiarFont("Times New Roman", 18, Color.red);
+	        entorno.escribirTexto("Puntos de Vida", 640, 350);
+	        
 	        double porcentajeVida = (double) mago.vidaActual / mago.vidaMax;
 	        int anchoVida = (int)(170 * porcentajeVida);
-	        entorno.dibujarRectangulo(700, 350, 170, 30, 0.0, Color.gray);
-	        entorno.dibujarRectangulo(700 - (170 - anchoVida) / 2, 350, anchoVida, 30, 0.0, Color.red);
+	        entorno.dibujarRectangulo(700, 380, 170, 30, 0.0, Color.gray);
+	        entorno.dibujarRectangulo(700 - (170 - anchoVida) / 2, 380, anchoVida, 30, 0.0, Color.red);
 	        entorno.cambiarFont("Times New Roman", 20, Color.white);
-	        entorno.escribirTexto((int)(porcentajeVida * 100) + "%", 665, 357);
+	        entorno.escribirTexto((int)(porcentajeVida * 100) + "%", 665, 387);
 
 	        // ------------------ BARRA DE ENERGÍA ------------------
+	        entorno.cambiarFont("Times New Roman", 18, Color.red);
+	        entorno.escribirTexto("Energía Mágica", 640, 435);
+	        
 	        double porcentajeEnergia = (double) energiaMagica / 100.0;
 	        int anchoEnergia = (int)(170 * porcentajeEnergia);
-	        entorno.dibujarRectangulo(700, 400, 170, 30, 0.0, Color.gray);
-	        entorno.dibujarRectangulo(700 - (170 - anchoEnergia) / 2, 400, anchoEnergia, 30, 0.0, Color.blue);
+	        entorno.dibujarRectangulo(700, 465, 170, 30, 0.0, Color.gray);
+	        entorno.dibujarRectangulo(700 - (170 - anchoEnergia) / 2, 465, anchoEnergia, 30, 0.0, Color.blue);
 	        entorno.cambiarFont("Times New Roman", 20, Color.white);
-	        entorno.escribirTexto((int)(porcentajeEnergia * 100) + "%", 665, 407);
+	        entorno.escribirTexto((int)(porcentajeEnergia * 100) + "%", 665, 472);
 
 
 	     // ------------------ ESTADÍSTICAS UNIFICADAS (centradas) ------------------
 	        entorno.cambiarFont("Georgia", 18, Color.white);
-	        entorno.escribirTexto("Derrotados: " + enemigosDerrotados, 640, 460);
-	        entorno.escribirTexto("Hechizo: " +
-	            (hechizoAgua.seleccionado ? "Agua" :
-	             hechizoFuego.seleccionado ? "Fuego" : "Ninguno"),
-	            640, 480);
+	        entorno.escribirTexto("Derrotados: " + enemigosDerrotados, 640, 550);
 
-	      
+	        if (!juegoTerminado && !mago.estaVivo()) {
+	            juegoTerminado = true;
+	            magoGano = false;
+	        }
+
+	        if (!juegoTerminado && enemigosDerrotados == totalEnemigos) {
+	            juegoTerminado = true;
+	            magoGano = true;
+	        }
 }  
 
   //Método que crea un murciélago en uno de los bordes de la pantalla
